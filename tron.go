@@ -7,11 +7,19 @@ import (
 	"net/http"
 )
 
-type Client struct {
-	Http   *http.Client
-	ApiKey string
-}
+type (
+	Client struct {
+		Http   *http.Client
+		ApiKey string
+	}
 
+	Request struct {
+		Method    string
+		Url       string
+		IsPayload bool
+		Payload   interface{}
+	}
+)
 
 const (
 	MainNet       = "https://api.trongrid.io"
@@ -25,18 +33,17 @@ func New(apiKey string) *Client {
 	}
 }
 
-
-func (c *Client) NewRequest(method, url string, isPayload bool, payload interface{}) ([]byte, int, error) {
+func (c *Client) NewRequest(request Request) ([]byte, int, error) {
 	var newPayload []byte
-	if isPayload {
-		jsonReq, jsonReqErr := json.Marshal(&payload)
+	if request.IsPayload {
+		jsonReq, jsonReqErr := json.Marshal(&request.Payload)
 		if jsonReqErr != nil {
 			return nil, 0, jsonReqErr
 		}
 		newPayload = jsonReq
 	}
 
-	req, reqErr := http.NewRequest(method, url, bytes.NewBuffer(newPayload))
+	req, reqErr := http.NewRequest(request.Method, request.Url, bytes.NewBuffer(newPayload))
 	if reqErr != nil {
 		return nil, 0, reqErr
 	}
